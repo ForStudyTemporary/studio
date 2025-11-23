@@ -4,6 +4,7 @@ export const alarmSounds = {
   'Synth Beep': 'Synth Beep',
   'Simple Bell': 'Simple Bell',
   'Digital Tone': 'Digital Tone',
+  'Birds': 'Birds'
 } as const;
 
 export type AlarmSound = keyof typeof alarmSounds;
@@ -41,6 +42,40 @@ const synths: { [key in AlarmSound]: () => void } = {
       }
     }).toDestination();
     synth.triggerAttackRelease("G4", "16n");
+  },
+  'Birds': () => {
+    const noiseSynth = new Tone.NoiseSynth({
+        noise: {
+            type: 'white'
+        },
+        envelope: {
+            attack: 0.005,
+            decay: 0.1,
+            sustain: 0.02,
+            release: 0.1
+        }
+    }).toDestination();
+
+    const autoFilter = new Tone.AutoFilter({
+        frequency: '8n',
+        baseFrequency: 600,
+        octaves: 4
+    }).toDestination();
+
+    noiseSynth.connect(autoFilter);
+    autoFilter.start();
+
+    const now = Tone.now();
+    noiseSynth.triggerAttackRelease("16n", now);
+    noiseSynth.triggerAttackRelease("16n", now + 0.2);
+    noiseSynth.triggerAttackRelease("16n", now + 0.5);
+
+    // Clean up the filter after some time
+    setTimeout(() => {
+        autoFilter.stop();
+        autoFilter.dispose();
+        noiseSynth.dispose();
+    }, 1000);
   }
 };
 
