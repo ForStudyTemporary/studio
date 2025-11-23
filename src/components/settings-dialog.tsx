@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { alarmSounds, type AlarmSound } from "@/lib/sounds";
 
 interface SettingsDialogProps {
@@ -23,6 +24,8 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
   alarmSound: AlarmSound;
   onAlarmSoundChange: (sound: AlarmSound) => void;
+  reminderInterval: number;
+  onReminderIntervalChange: (interval: number) => void;
 }
 
 export const SettingsDialog: FC<SettingsDialogProps> = ({
@@ -30,6 +33,8 @@ export const SettingsDialog: FC<SettingsDialogProps> = ({
   onOpenChange,
   alarmSound,
   onAlarmSoundChange,
+  reminderInterval,
+  onReminderIntervalChange,
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -41,6 +46,18 @@ export const SettingsDialog: FC<SettingsDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="reminder-interval" className="text-right">
+              Interval (min)
+            </Label>
+            <Input
+              id="reminder-interval"
+              type="number"
+              value={reminderInterval / 60}
+              onChange={(e) => onReminderIntervalChange(parseInt(e.target.value, 10) * 60)}
+              className="col-span-3"
+            />
+          </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="alarm-sound" className="text-right">
               Alarm Sound

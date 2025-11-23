@@ -11,7 +11,7 @@ import { playSound, type AlarmSound, alarmSounds } from "@/lib/sounds";
 import { SettingsDialog } from "./settings-dialog";
 import { cn } from "@/lib/utils";
 
-const ONE_HOUR_IN_SECONDS = 3600;
+const DEFAULT_INTERVAL_SECONDS = 3600;
 
 export function Timer() {
   const [isClient, setIsClient] = useState(false);
@@ -20,10 +20,11 @@ export function Timer() {
   const [alarmSound, setAlarmSound] = useState<AlarmSound>("Synth Beep");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAlarming, setIsAlarming] = useState(false);
+  const [reminderInterval, setReminderInterval] = useState(DEFAULT_INTERVAL_SECONDS);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
-  const lastAlarmHourRef = useRef<number>(0);
+  const lastAlarmPointRef = useRef<number>(0);
 
   useEffect(() => {
     setIsClient(true);
@@ -31,9 +32,14 @@ export function Timer() {
     const savedIsRunning = localStorage.getItem("timerIsRunning") === "true";
     const savedStartTime = parseInt(localStorage.getItem("timerStartTime") || "0", 10);
     const savedAlarmSound = localStorage.getItem("timerAlarmSound") as AlarmSound | null;
+    const savedInterval = parseInt(localStorage.getItem("timerInterval") || "0", 10);
     
     if (savedAlarmSound && alarmSounds[savedAlarmSound]) {
         setAlarmSound(savedAlarmSound);
+    }
+    
+    if (savedInterval > 0) {
+      setReminderInterval(savedInterval);
     }
 
     if (savedIsRunning && savedStartTime > 0) {
@@ -42,7 +48,7 @@ export function Timer() {
       setElapsedTime(elapsed);
       setIsRunning(true);
       startTimeRef.current = savedStartTime;
-      lastAlarmHourRef.current = Math.floor(elapsed / ONE_HOUR_IN_SECONDS);
+      lastAlarmPointRef.current = Math.floor(elapsed / (savedInterval > 0 ? savedInterval : reminderInterval));
     }
   }, []);
 
@@ -58,9 +64,9 @@ export function Timer() {
         const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
         setElapsedTime(elapsed);
         
-        const currentHour = Math.floor(elapsed / ONE_HOUR_IN_SECONDS);
-        if (currentHour > 0 && currentHour > lastAlarmHourRef.current) {
-          lastAlarmHourRef.current = currentHour;
+        const currentPoint = Math.floor(elapsed / reminderInterval);
+        if (currentPoint > 0 && currentPoint > lastAlarmPointRef.current) {
+          lastAlarmPointRef.current = currentPoint;
           triggerAlarm();
         }
       }, 1000);
@@ -82,7 +88,7 @@ export function Timer() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning, isClient, triggerAlarm]);
+  }, [isRunning, isClient, triggerAlarm, reminderInterval]);
 
   const handleStartStop = async () => {
     if (Tone.context.state !== 'running') {
@@ -94,14 +100,14 @@ export function Timer() {
     } else {
       startTimeRef.current = Date.now() - elapsedTime * 1000;
       setIsRunning(true);
-      lastAlarmHourRef.current = Math.floor(elapsedTime / ONE_HOUR_IN_SECONDS);
+      lastAlarmPointRef.current = Math.floor(elapsedTime / reminderInterval);
     }
   };
 
   const handleStopAndReset = () => {
       setIsRunning(false);
       setElapsedTime(0);
-      lastAlarmHourRef.current = 0;
+      lastAlarmPointRef.current = 0;
       localStorage.removeItem("timerIsRunning");
       localStorage.removeItem("timerStartTime");
   }
@@ -110,6 +116,13 @@ export function Timer() {
     setAlarmSound(sound);
     localStorage.setItem("timerAlarmSound", sound);
     playSound(sound);
+  };
+
+  const handleReminderIntervalChange = (interval: number) => {
+    if(interval > 0) {
+      setReminderInterval(interval);
+      localStorage.setItem("timerInterval", String(interval));
+    }
   };
   
   if (!isClient) {
@@ -167,6 +180,8 @@ export function Timer() {
         onOpenChange={setIsSettingsOpen}
         alarmSound={alarmSound}
         onAlarmSoundChange={handleAlarmSoundChange}
+        reminderInterval={reminderInterval}
+        onReminderIntervalChange={handleReminderIntervalChange}
       />
     </>
   );
