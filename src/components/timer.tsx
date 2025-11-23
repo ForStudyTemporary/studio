@@ -186,12 +186,12 @@ export function Timer() {
               <>
                 <Button onClick={handleStartStop} size="lg" className="w-32 text-lg font-semibold">
                   {isRunning ? <Square className="mr-2" /> : <Play className="mr-2" />}
-                  {isRunning ? "Pause" : "Start"}
+                  {isRunning ? "Stop" : "Start"}
                 </Button>
-                <Button onClick={handleStopAndReset} size="lg" variant="secondary" className="w-32 text-lg font-semibold" disabled={!isRunning && elapsedTime === 0}>
+                 {(!isRunning && elapsedTime > 0) && <Button onClick={handleStopAndReset} size="lg" variant="secondary" className="w-32 text-lg font-semibold" disabled={!isRunning && elapsedTime === 0}>
                     <Square className="mr-2" />
-                    Stop
-                </Button>
+                    Reset
+                </Button>}
               </>
             )}
 
