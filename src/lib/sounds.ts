@@ -4,7 +4,11 @@ export const alarmSounds = {
   'Synth Beep': 'Synth Beep',
   'Simple Bell': 'Simple Bell',
   'Digital Tone': 'Digital Tone',
-  'Birds': 'Birds'
+  'Morning Dove': 'Morning Dove',
+  'Chirping Sparrow': 'Chirping Sparrow',
+  'Forest Canary': 'Forest Canary',
+  'Gentle Robin': 'Gentle Robin',
+  'Soothing Warbler': 'Soothing Warbler',
 } as const;
 
 export type AlarmSound = keyof typeof alarmSounds;
@@ -43,39 +47,62 @@ const synths: { [key in AlarmSound]: () => void } = {
     }).toDestination();
     synth.triggerAttackRelease("G4", "16n");
   },
-  'Birds': () => {
-    const noiseSynth = new Tone.NoiseSynth({
-        noise: {
-            type: 'white'
-        },
-        envelope: {
-            attack: 0.005,
-            decay: 0.1,
-            sustain: 0.02,
-            release: 0.1
-        }
+  'Morning Dove': () => {
+    const synth = new Tone.Synth({
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 1 },
     }).toDestination();
-
-    const autoFilter = new Tone.AutoFilter({
-        frequency: '8n',
-        baseFrequency: 600,
-        octaves: 4
-    }).toDestination();
-
-    noiseSynth.connect(autoFilter);
-    autoFilter.start();
-
     const now = Tone.now();
-    noiseSynth.triggerAttackRelease("16n", now);
-    noiseSynth.triggerAttackRelease("16n", now + 0.2);
-    noiseSynth.triggerAttackRelease("16n", now + 0.5);
-
-    // Clean up the filter after some time
-    setTimeout(() => {
-        autoFilter.stop();
-        autoFilter.dispose();
-        noiseSynth.dispose();
-    }, 1000);
+    synth.triggerAttackRelease('A4', '8n', now);
+    synth.triggerAttackRelease('F#4', '8n', now + 0.3);
+    synth.triggerAttackRelease('D4', '4n', now + 0.6);
+  },
+  'Chirping Sparrow': () => {
+    const synth = new Tone.FMSynth({
+        harmonicity: 3,
+        modulationIndex: 10,
+        envelope: { attack: 0.01, decay: 0.1, sustain: 0.01, release: 0.2 },
+        modulationEnvelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 }
+    }).toDestination();
+    const now = Tone.now();
+    synth.triggerAttackRelease('C6', '16n', now);
+    synth.triggerAttackRelease('E6', '16n', now + 0.1);
+    synth.triggerAttackRelease('G6', '16n', now + 0.2);
+  },
+  'Forest Canary': () => {
+    const synth = new Tone.MembraneSynth({
+        pitchDecay: 0.01,
+        octaves: 5,
+        oscillator: { type: 'sine' },
+        envelope: { attack: 0.001, decay: 0.5, sustain: 0.01, release: 1.4 },
+    }).toDestination();
+    const now = Tone.now();
+    synth.triggerAttackRelease('G5', '8n', now);
+    synth.triggerAttackRelease('A5', '8n', now + 0.2);
+    synth.triggerAttackRelease('G5', '8n', now + 0.4);
+  },
+  'Gentle Robin': () => {
+    const synth = new Tone.PluckSynth({
+        attackNoise: 1,
+        dampening: 4000,
+        resonance: 0.7
+    }).toDestination();
+    const now = Tone.now();
+    synth.triggerAttackRelease('D5', now);
+    synth.triggerAttackRelease('E5', now + 0.25);
+    synth.triggerAttackRelease('C5', now + 0.5);
+  },
+  'Soothing Warbler': () => {
+    const synth = new Tone.Synth({
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 0.4 }
+    }).toDestination();
+    const vibrato = new Tone.Vibrato("8n", 0.2).toDestination();
+    synth.connect(vibrato);
+    const now = Tone.now();
+    synth.triggerAttackRelease('A5', '8n', now);
+    synth.triggerAttackRelease('B5', '8n', now + 0.3);
+    synth.triggerAttackRelease('G#5', '4n', now + 0.6);
   }
 };
 
