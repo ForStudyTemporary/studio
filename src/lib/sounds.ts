@@ -20,7 +20,6 @@ const synths: { [key in AlarmSound]: () => void } = {
   },
   'Simple Bell': () => {
     const synth = new Tone.MetalSynth({
-      frequency: 300,
       envelope: {
         attack: 0.001,
         decay: 1.4,
