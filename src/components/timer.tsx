@@ -51,7 +51,7 @@ export function Timer() {
       startTimeRef.current = savedStartTime;
       lastAlarmPointRef.current = Math.floor(elapsed / (savedInterval > 0 ? savedInterval : reminderInterval));
     }
-  }, []);
+  }, [reminderInterval]);
 
   const stopAlarm = useCallback(() => {
     if (alarmIntervalRef.current) {

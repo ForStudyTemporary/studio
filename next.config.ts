@@ -1,7 +1,6 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
   basePath: '/studio',
   output: 'export',
   trailingSlash: true,
