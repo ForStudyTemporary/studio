@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Play, Square, Settings } from "lucide-react";
+import { Play, Square, Settings, BellOff } from "lucide-react";
 import * as Tone from "tone";
 
 import { Button } from "@/components/ui/button";
@@ -19,10 +19,11 @@ export function Timer() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [alarmSound, setAlarmSound] = useState<AlarmSound>("Synth Beep");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isAlarming, setIsAlarming] = useState(false);
+  const [isRinging, setIsRinging] = useState(false);
   const [reminderInterval, setReminderInterval] = useState(DEFAULT_INTERVAL_SECONDS);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const alarmIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
   const lastAlarmPointRef = useRef<number>(0);
 
@@ -52,11 +53,25 @@ export function Timer() {
     }
   }, []);
 
+  const stopAlarm = useCallback(() => {
+    if (alarmIntervalRef.current) {
+      clearInterval(alarmIntervalRef.current);
+      alarmIntervalRef.current = null;
+    }
+    setIsRinging(false);
+  }, []);
+
   const triggerAlarm = useCallback(() => {
-    playSound(alarmSound);
-    setIsAlarming(true);
-    setTimeout(() => setIsAlarming(false), 1000);
-  }, [alarmSound]);
+    if (isRinging) return;
+    setIsRinging(true);
+    
+    const playAndRepeat = () => {
+      playSound(alarmSound);
+    }
+
+    playAndRepeat();
+    alarmIntervalRef.current = setInterval(playAndRepeat, 2000);
+  }, [alarmSound, isRinging]);
 
   useEffect(() => {
     if (isRunning) {
@@ -65,7 +80,7 @@ export function Timer() {
         setElapsedTime(elapsed);
         
         const currentPoint = Math.floor(elapsed / reminderInterval);
-        if (currentPoint > 0 && currentPoint > lastAlarmPointRef.current) {
+        if (reminderInterval > 0 && currentPoint > 0 && currentPoint > lastAlarmPointRef.current) {
           lastAlarmPointRef.current = currentPoint;
           triggerAlarm();
         }
@@ -110,6 +125,7 @@ export function Timer() {
       lastAlarmPointRef.current = 0;
       localStorage.removeItem("timerIsRunning");
       localStorage.removeItem("timerStartTime");
+      stopAlarm();
   }
 
   const handleAlarmSoundChange = (sound: AlarmSound) => {
@@ -155,21 +171,31 @@ export function Timer() {
           <div 
             className={cn(
                 "font-mono text-7xl md:text-8xl font-bold tracking-tighter text-foreground transition-transform duration-300 ease-in-out",
-                isAlarming && "scale-110 animate-pulse"
+                isRinging && "scale-110 animate-pulse"
             )}
           >
             {formatTime(elapsedTime)}
           </div>
           <div className="flex items-center gap-4">
-            <Button onClick={handleStartStop} size="lg" className="w-32 text-lg font-semibold">
-              {isRunning ? <Square className="mr-2" /> : <Play className="mr-2" />}
-              {isRunning ? "Pause" : "Start"}
-            </Button>
-            <Button onClick={handleStopAndReset} size="lg" variant="secondary" className="w-32 text-lg font-semibold" disabled={!isRunning && elapsedTime === 0}>
-                <Square className="mr-2" />
-                Stop
-            </Button>
-            <Button onClick={() => setIsSettingsOpen(true)} variant="ghost" size="icon" aria-label="Open settings">
+            {isRinging ? (
+              <Button onClick={stopAlarm} size="lg" className="w-48 text-lg font-semibold" variant="destructive">
+                <BellOff className="mr-2" />
+                Stop Alarm
+              </Button>
+            ) : (
+              <>
+                <Button onClick={handleStartStop} size="lg" className="w-32 text-lg font-semibold">
+                  {isRunning ? <Square className="mr-2" /> : <Play className="mr-2" />}
+                  {isRunning ? "Pause" : "Start"}
+                </Button>
+                <Button onClick={handleStopAndReset} size="lg" variant="secondary" className="w-32 text-lg font-semibold" disabled={!isRunning && elapsedTime === 0}>
+                    <Square className="mr-2" />
+                    Stop
+                </Button>
+              </>
+            )}
+
+            <Button onClick={() => setIsSettingsOpen(true)} variant="ghost" size="icon" aria-label="Open settings" disabled={isRinging}>
               <Settings />
             </Button>
           </div>
